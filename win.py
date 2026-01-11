@@ -4,6 +4,8 @@ import tkinter as tk
 from tkinter import IntVar
 from tkinter import messagebox
 import tkinter.font as tkFont
+from tkinter import filedialog as fd
+
 
 def on_drag_start(event):
     widget = event.widget
@@ -200,7 +202,12 @@ def createWidget():
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
         wlist.append(w)
-
+    elif (wvar.get() == "LabelFrame"):
+        w=tk.LabelFrame(win, text=caption)
+        w.place(x=x_entry.get(), y=y_entry.get(),height=height_entry.get(), width=width_entry.get())
+        w.bind("<ButtonPress-1>", on_drag_start)
+        w.bind("<B1-Motion>", on_drag_motion)
+        wlist.append(w)
     #if(cmd!=""):
      #   print(cmd)
     name_entry.focus_force()
@@ -224,7 +231,10 @@ def createWidget():
 
 def write_widget_code():
 	ctr=0
-	with open("widgets.py","w") as f:
+	filedir=fd.asksaveasfilename()
+	fnLabel.config(text=f"File Name = {filedir}")
+	
+	with open(filedir,"w") as f:
 		# write imports and window def
 		f.write("import tkinter as tk\n")
 		f.write("from tkinter import IntVar\n\n")
@@ -276,8 +286,9 @@ def write_widget_code():
 
 
 root = tk.Tk()
-root.geometry("925x650+300+10")
+root.geometry("620x670+300+10")
 root.title("Python Drag and Drop GUI Designer")
+
 widgets = [
     "Button", "Label", "Entry", "Text", "Frame", 
     "Checkbutton", "Radiobutton", "Listbox", "Scrollbar", 
@@ -299,60 +310,61 @@ for i, widget in enumerate(widgets):
 
 #widget properties
 name_label = tk.Label(root, text="Name")
-name_label.place(x=10, y=200)
+name_label.place(x=10, y=300)
 name_entry = tk.Entry(root)
-name_entry.place(x=60, y=200)
+name_entry.place(x=60, y=300)
 
 name_entry.bind("<FocusOut>", update_cmdfnc)
  
 
 cmd_label = tk.Label(root, text="Command Fnc")
-cmd_label.place(x=300, y=200)
+cmd_label.place(x=300, y=300)
 cmd_entry = tk.Entry(root)
-cmd_entry.place(x=400, y=200)
+cmd_entry.place(x=400, y=300)
 
 caption_label = tk.Label(root, text="Text")
-caption_label.place(x=10, y=230)
+caption_label.place(x=10, y=330)
 caption_entry = tk.Entry(root)
-caption_entry.place(x=60, y=230)
+caption_entry.place(x=60, y=330)
 
 x_label = tk.Label(root, text="Xpos")
-x_label.place(x=10, y=260)
+x_label.place(x=10, y=360)
 x_entry = tk.Entry(root)
-x_entry.place(x=60, y=260)
+x_entry.place(x=60, y=360)
 
 y_label = tk.Label(root, text="Ypos")
-y_label.place(x=10, y=290)
+y_label.place(x=10, y=390)
 y_entry = tk.Entry(root)
-y_entry.place(x=60, y=290)
+y_entry.place(x=60, y=390)
 
 width_label = tk.Label(root, text="Width")
-width_label.place(x=10, y=320)
+width_label.place(x=10, y=420)
 width_entry = tk.Entry(root)
-width_entry.place(x=60, y=320)
+width_entry.place(x=60, y=420)
 
 height_label = tk.Label(root, text="Height")
-height_label.place(x=10, y=350)
+height_label.place(x=10, y=450)
 height_entry = tk.Entry(root)
-height_entry.place(x=60, y=350)
+height_entry.place(x=60, y=450)
 
 button=tk.Button(root,text="Make Widget", command=createWidget)
-button.place(x=60,y=380)
+button.place(x=5,y=480)
 button.config(state="disabled")
 root.bind('<Return>', lambda event:createWidget())
 
 update_button=tk.Button(root,text="Update Widget", command=updateWidget)
-update_button.place(x=220,y=380)
+update_button.place(x=165,y=480)
 update_button.config(state="disabled")
 
 clear_button=tk.Button(root, text="Clear Widget", command=clear_widget)
-clear_button.place(x=380,y=380)
+clear_button.place(x=325,y=480)
 
-
+wf = tk.LabelFrame(root,text="Window",  width=600, height=140, borderwidth=3)
+wf.place(x=4,y=520)
 
 ## New window properties
 wbutton=tk.Button(root,text="Make Window", command= lambda: createWindow(wtentry.get()))
-wbutton.place(x=10,y=500)
+wbutton.place(x=450,y=540,width=125)
 
 l=tk.Label(root, text="Window Title")
 l.place(x=10,y=545)
@@ -387,20 +399,22 @@ ypentry.insert(0,"10")
 # Create a monospace font
 monospace_font = tkFont.Font(family="Menlo", size=10)
 wigbox=tk.Listbox(root, font=monospace_font)
-wigbox.place(x=610,y=10,width=300,height=360)
+wigbox.place(x=60,y=140,width=350,height=150)
+
+
+fnLabel=tk.Label(root,text="File name: ")
+fnLabel.place(x=10, y=625)
 
 write_button = tk.Button(root, text="Write Code", command=write_widget_code)
-write_button.place(x=610, y=600)
+write_button.place(x=450, y=570, width=125)
 write_button.config(state="disabled")
 
 edit_button=tk.Button(root, text="Edit", command=edit_widget)
-edit_button.place(x=850,y=380)
+edit_button.place(x=415,y=140, width=125)
 edit_button.config(state="disabled")
 
-
-
 quit_button = tk.Button(root, text="Quit", command=root.quit)
-quit_button.place(x=850, y=600)
+quit_button.place(x=450, y=600, width=125)
 
 # tracks number of widgets
 widgetct=-1
