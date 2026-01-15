@@ -1,7 +1,8 @@
+#!/usr/bin/python3
 #### updated dnd.py using ai generated code for interface
 
 import tkinter as tk
-from tkinter import IntVar
+from tkinter import IntVar, StringVar
 from tkinter import messagebox
 import tkinter.font as tkFont
 from tkinter import filedialog as fd
@@ -29,6 +30,9 @@ def clr_widget_fields():
 	height_entry.delete(0,"end")
 	width_entry.delete(0,"end")
 	cmd_entry.delete(0,"end")
+	cmdtext.delete("1.0", tk.END)
+	from_entry.delete(0,"end")
+	to_entry.delete(0,"end")
 
 ## pass in a widget and return a string of widget type parsed
 def parse_widget_type(w):
@@ -41,10 +45,33 @@ def parse_widget_type(w):
 # default text in cmd_entry if appropriate type of widget 
 def change_widget():
 	wig=wvar.get()
+	#wigcmd is a list of widgets that can have a command=
 	if (wig in wigcmd):
 		cmd_entry.config(state="normal")
+		cmdtext.config(state="normal")
 	else:
+		cmd_entry.delete(0,'end')
+		cmdtext.delete(1.0, 'end')
 		cmd_entry.config(state="disable")
+		cmdtext.config(state="disable")
+	if (wig in wigtxt):
+		caption_entry.config(state="normal")
+	else:
+		caption_entry.delete(0,'end')
+		caption_entry.config(state="disable")
+		
+		
+	if(wig=="Spinbox"):
+		from_label.place(x=10, y=450)
+		from_entry.place(x=60, y=450, width=50)
+		to_label.place(x=130, y=450)
+		to_entry.place(x=175, y=450, width=50)
+
+	else:
+		from_label.place_forget()
+		from_entry.place_forget()
+		to_label.place_forget()
+		to_entry.place_forget()
 
 
 ## create name of commnand function
@@ -53,9 +80,10 @@ def update_cmdfnc(event):
 	if (wig in wigcmd and name_entry.get() !="" ):
 		cmd_entry.delete(0,"end")
 		nstr=name_entry.get()
-		cmd_entry.insert(0,"on_" + nstr + "_clicked")
-
-
+		cmd_entry.insert(0,"on_" + nstr.replace(" ","_") + "_clicked")
+		cmdtext.insert(1.0,f'def on_{nstr.replace(" ","_")}_clicked():\n\tprint("test")\n')
+		
+#Save the updated widget
 def updateWidget():
 	global ew
 	global edit_index
@@ -63,6 +91,7 @@ def updateWidget():
 	cmdlst[edit_index]=cmd_entry.get()
 	ew.config(text=caption_entry.get())
 	ew.place(x=x_entry.get(), y=y_entry.get(), width=width_entry.get(), height=height_entry.get())
+	#ew.place(x=x_entry.get(), y=y_entry.get())
 	wstr=parse_widget_type(ew)+"               "
 	wstr=wstr[0:15]+wnlist[edit_index]
 	wigbox.delete(edit_index)
@@ -73,7 +102,8 @@ def updateWidget():
 	global mode
 	mode="add"
 	print(wnlist)
-		
+	
+# update form with widget info for widget to change
 def edit_widget():
 	print("Edit Widget")
 	selected_index=wigbox.curselection()
@@ -87,21 +117,33 @@ def edit_widget():
 		index=selected_index[0]
 		edit_index=index
 		w=wlist[index]
+		wtype=parse_widget_type(w)
+		print(f"index = {index}  type={wtype} fx={w.winfo_x()}  wx{w.winfo_rootx()}")
 		ew=w
 		clr_widget_fields()
 		name_entry.insert(0,wnlist[index])
 		cmd_entry.insert(0,cmdlst[index])
 		caption_entry.insert(0,w.cget("text"))
-		x_entry.insert(0,w.winfo_x())
-		y_entry.insert(0,w.winfo_y())
+		if (masterlist[index]!="root"):
+			mstridx=masteridx[index]
+			x_entry.insert(0,str(w.winfo_x()-m[mstridx].cget("borderwidth")))
+			y_entry.insert(0,str(w.winfo_y()-m[mstridx].cget("borderwidth")))
+		else:
+			x_entry.insert(0,w.winfo_x())
+			y_entry.insert(0,w.winfo_y())
+			
 		width_entry.insert(0,w.winfo_width())
 		height_entry.insert(0,w.winfo_height())
+		if (wtype=="Spinbox"):
+			from_entry.insert(0,w.cget("from"))
+			to_entry.insert(0,w.cget("to"))
 		button.config(state="disable")
 		update_button.config(state="active")
 		name_entry.focus_force()
 		global mode
 		mode="update"
 		print(str(type(w)))
+
 
 # clear all widget fields and put in "add" mode 
 # this will reject changes in update mode
@@ -117,6 +159,7 @@ def clear_widget():
 # Create the target window
 def createWindow(text):
     global win
+    global mode
     win=tk.Tk()
     win.title(text)
     gstr=wwentry.get()+"x"+whentry.get()+"+"+xpentry.get()+"+"+ypentry.get()
@@ -131,43 +174,49 @@ def createWindow(text):
     whentry.config(state="disable")
     xpentry.config(state="disable")
     ypentry.config(state="disable")
-
-		
+    m.append(win)
+    mode="add"
+    print("master list = "+str(m))
+    
+    
 # Create Widget on working window
 def createWidget():
+	#add or update mode
     global mode
-    
+        
     if (mode!="add"):
        messagebox.showinfo("","Not in Add mode")
-       return
-    
+       return    
     if(name_entry.get()=="" or x_entry.get()=="" or y_entry.get()==""):
         messagebox.showinfo("Information","Missing widget information")
         return
-    
-    
+       
     global widgetct
     widgetct=widgetct+1
     caption=caption_entry.get()
     cmd=cmd_entry.get()
-    
+    cmdcode=cmdtext.get(1.0, "end")
+    mindex=master_options.index(mastervar.get())
+    print(f"master options = {master_options} master_index = {mindex}")
+    global m
     #Label
     if (wvar.get() == "Label"):
-        w=tk.Label(win, text = caption)
+        w=tk.Label(m[mindex], text = caption)
         w.place(x=x_entry.get(), y=y_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
-        wlist.append(w)            
+        wlist.append(w)
+        print(f"x={w.winfo_x()}")            
     # Button
     elif (wvar.get() == "Button"):
-        w=tk.Button(win, text=caption)
+        w=tk.Button(m[mindex], text=caption)
         w.place(x=x_entry.get(), y=y_entry.get(), height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
         wlist.append(w)
     # Entry Box
     elif (wvar.get() == "Entry"):
-        w=tk.Entry(win)
+        w=tk.Entry(m[mindex])
         w.insert(0,caption)
         w.place(x=x_entry.get(), y=y_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
@@ -175,7 +224,7 @@ def createWidget():
         wlist.append(w)
     # Entry Box
     elif (wvar.get() == "Text"):
-        w=tk.Text(win)
+        w=tk.Text(m[mindex])
         w.insert("1.0",caption)
         w.place(x=x_entry.get(), y=y_entry.get(),height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
@@ -183,46 +232,60 @@ def createWidget():
         wlist.append(w)
     # Checkbutton Box
     elif (wvar.get() == "Checkbutton"):
-        w=tk.Checkbutton(win,text=caption)
+        w=tk.Checkbutton(m[mindex],text=caption)
         w.place(x=x_entry.get(), y=y_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
         wlist.append(w)
     #spinbox    
     elif (wvar.get() == "Spinbox"):
-        w=tk.Spinbox(win,text=caption)
-        w.place(x=x_entry.get(), y=y_entry.get())
+        w=tk.Spinbox(m[mindex],text=caption, from_ = from_entry.get(), to=to_entry.get())
+        w.place(x=x_entry.get(), y=y_entry.get(), height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
         wlist.append(w)    
     # ListBox
     elif (wvar.get() == "Listbox"):
-        w=tk.Listbox(win)
+        w=tk.Listbox(m[mindex])
         w.place(x=x_entry.get(), y=y_entry.get(),height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
         wlist.append(w)
     elif (wvar.get() == "LabelFrame"):
-        w=tk.LabelFrame(win, text=caption)
+        w=tk.LabelFrame(m[mindex], text=caption, borderwidth=2)
         w.place(x=x_entry.get(), y=y_entry.get(),height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
         wlist.append(w)
-    #if(cmd!=""):
-     #   print(cmd)
+        m.append(w)
+        master_options.append(name_entry.get().replace(" ","_"))
+        opt=name_entry.get().replace(" ","_")
+        master_om['menu'].add_command(label=opt, command=tk._setit(mastervar, opt))
+    elif (wvar.get() == "Frame"):
+        w=tk.Frame(m[mindex], borderwidth=2, relief=tk.GROOVE)
+        w.place(x=x_entry.get(), y=y_entry.get(),height=height_entry.get(), width=width_entry.get())
+        w.bind("<ButtonPress-1>", on_drag_start)
+        w.bind("<B1-Motion>", on_drag_motion)
+        wlist.append(w)
+        m.append(w)
+        master_options.append(name_entry.get().replace(" ","_"))
+        opt=name_entry.get().replace(" ","_")
+        master_om['menu'].add_command(label=opt, command=tk._setit(mastervar, opt))
+
     name_entry.focus_force()
     cmdlst.append(cmd)
+    proclist.append(cmdcode)
+    masterlist.append(mastervar.get())
+    masteridx.append(mindex)
     print(cmdlst)
     print(cmd)
     print(wlist)
-    wnlist.append(name_entry.get())
+    print(masterlist)
+    wnlist.append(name_entry.get().replace(" ","_"))
     wname=name_entry.get()
     print(wnlist)
     clr_widget_fields()
     mystr=parse_widget_type(w)
-    #mystr=str(type(w))
-    #mystr=mystr.split(".")[1]
-    #mystr=mystr.split("'")[0]
     mystr=mystr+"                    "
     mystr=mystr[0:15]
     lbstr=mystr + wname
@@ -246,12 +309,15 @@ def write_widget_code():
 		f.write(pstr)
 		f.write("\n\n")
 		
-		for c in cmdlst:
-			if (c!=""):
+		for index, c in enumerate(cmdlst):
+			if (c!="" and proclist[index]==""):
 				cstr="def " + c + "():\n"
 				cstr2='\tprint("in ' + c + '")\n'
 				f.write(cstr)
 				f.write(cstr2)
+				f.write("\n")
+			elif (c!="" and proclist[index]!=""):
+				f.write(proclist[index])
 				f.write("\n")
 		
 		# write out all the widgets
@@ -259,11 +325,14 @@ def write_widget_code():
 			print(f"index = {index}  cmd={cmdlst[index]} w={str(w)}")
 			wstr=str(type(w)).split(".")[1]
 			wstr=wstr.split("'")[0]
-			if (wstr!="Listbox" and wstr!="Text"):
-				pstr = wnlist[ctr] + '=tk.' + wstr+'(root, text="' + w.cget('text') +'"' 
+			mstr=masterlist[index]
+				
+			if (wstr!="Listbox" and wstr!="Text" and wstr!="Frame"):
+				pstr = wnlist[ctr] + '=tk.' + wstr+'('+mstr+', text="' + w.cget('text') +'"' 
 			else:
-				 pstr = wnlist[ctr] + '=tk.' + wstr+'(root'
-			
+				 pstr = wnlist[ctr] + '=tk.' + wstr+'('+mstr
+			if (wstr=="Frame"):
+				pstr=pstr+', borderwidth=2, relief="groove"'
 			if (cmdlst[index]!=""):
 				pstr=pstr+", command="+str(cmdlst[index])
 			pstr=pstr + ')'
@@ -281,76 +350,118 @@ def write_widget_code():
 		f.write("root.mainloop()")
 		f.write("\n")
 		f.close()
-		messagebox.showinfo("Information", "File Widgets has been written")
+		messagebox.showinfo("Information", f"File {filedir} has been written")
 
 
 
 root = tk.Tk()
-root.geometry("620x670+300+10")
+root.geometry("620x670+400+5")
 root.title("Python Drag and Drop GUI Designer")
 
+wgf = tk.LabelFrame(root,text="Widget Types",  width=600, height=120, borderwidth=3)
+wgf.place(x=4,y=1)
+
+
+# widgets = [
+    # "Button", "Label", "Entry", "Text", "Frame", 
+    # "Checkbutton", "Radiobutton", "Listbox", "Scrollbar", 
+    # "Canvas", "Menu", "MenuButton", "Scale", "Spinbox", 
+    # "Message", "PhotoImage", "Toplevel", "PanedWindow", 
+    # "LabelFrame", "Notebook"
+#]
+
 widgets = [
-    "Button", "Label", "Entry", "Text", "Frame", 
-    "Checkbutton", "Radiobutton", "Listbox", "Scrollbar", 
-    "Canvas", "Menu", "MenuButton", "Scale", "Spinbox", 
-    "Message", "PhotoImage", "Toplevel", "PanedWindow", 
-    "LabelFrame", "Notebook"
+    "Button", "Label", "Entry", "Text", "Checkbutton", 
+    "Radiobutton", "Spinbox", "Listbox", "Scrollbar", "MenuButton",
+    "Scale", "PhotoImage", "Canvas", "Frame", "LabelFrame"
 ]
 
+# list of widget types that can have a command assignment
 wigcmd = [
 	"Button", "Checkbutton", "Radiobutton", "Spinbox", "Scale", "Menu"
 ]
+
+#list of widget types that can have text assignment
+wigtxt = [
+	"Button", "Label","Checkbutton", "Radiobutton", "LabelFrame"
+] 
 
 wvar = tk.StringVar(value=widgets[0])
 
 for i, widget in enumerate(widgets):
     rb = tk.Radiobutton(root, text=widget, variable=wvar, value=widget, command=change_widget)
-    rb.place(x=(i % 5) * 110 + 10, y=(i // 5) * 30 + 10)
+    rb.place(x=(i % 5) * 110 + 10, y=(i // 5) * 25 + 20)
 
-
+wif=tk.LabelFrame(root,text="Widget Info", width=600, height=400, borderwidth=3)
+wif.place(x=4,y=120)
 #widget properties
 name_label = tk.Label(root, text="Name")
 name_label.place(x=10, y=300)
 name_entry = tk.Entry(root)
 name_entry.place(x=60, y=300)
-
 name_entry.bind("<FocusOut>", update_cmdfnc)
  
-
-cmd_label = tk.Label(root, text="Command Fnc")
-cmd_label.place(x=300, y=300)
+cmd_label = tk.Label(root, text="Command Function")
+cmd_label.place(x=240, y=300)
 cmd_entry = tk.Entry(root)
-cmd_entry.place(x=400, y=300)
+cmd_entry.place(x=380, y=300)
+
+cmdtext=tk.Text(root)
+cmdtext.place(x=240,y=330,width=305,height=150)
+
+
+master_options = ["root"]
+mastervar = StringVar(value="root")
+
+master_label=tk.Label(root, text="Master")
+master_label.place(x=10, y=330)
+master_om = tk.OptionMenu(root, mastervar, "root")
+master_om.place(x=60,y=330, width=100, height=25)
 
 caption_label = tk.Label(root, text="Text")
-caption_label.place(x=10, y=330)
+caption_label.place(x=10, y=360)
 caption_entry = tk.Entry(root)
-caption_entry.place(x=60, y=330)
+caption_entry.place(x=60, y=360)
 
 x_label = tk.Label(root, text="Xpos")
-x_label.place(x=10, y=360)
+x_label.place(x=10, y=390)
 x_entry = tk.Entry(root)
-x_entry.place(x=60, y=360)
+x_entry.place(x=60, y=390, width=50)
 
 y_label = tk.Label(root, text="Ypos")
-y_label.place(x=10, y=390)
+y_label.place(x=130, y=390)
 y_entry = tk.Entry(root)
-y_entry.place(x=60, y=390)
+y_entry.place(x=175, y=390, width=50)
 
 width_label = tk.Label(root, text="Width")
 width_label.place(x=10, y=420)
 width_entry = tk.Entry(root)
-width_entry.place(x=60, y=420)
+width_entry.place(x=60, y=420, width=50)
 
 height_label = tk.Label(root, text="Height")
-height_label.place(x=10, y=450)
+height_label.place(x=130, y=420)
 height_entry = tk.Entry(root)
-height_entry.place(x=60, y=450)
+height_entry.place(x=175, y=420, width=50)
+
+from_label = tk.Label(root, text="From")
+from_label.place(x=10, y=450)
+from_label.place_forget()
+from_entry = tk.Entry(root)
+from_entry.place(x=60, y=450, width=50)
+from_entry.place_forget()
+
+to_label = tk.Label(root, text="To")
+to_label.place(x=130, y=450)
+to_label.place_forget()
+to_entry = tk.Entry(root)
+to_entry.place(x=175, y=450, width=50)
+to_entry.place_forget()
+
 
 button=tk.Button(root,text="Make Widget", command=createWidget)
-button.place(x=5,y=480)
+button.place(x=10,y=480)
 button.config(state="disabled")
-root.bind('<Return>', lambda event:createWidget())
+#root.bind('<Return>', lambda event:createWidget())
 
 update_button=tk.Button(root,text="Update Widget", command=updateWidget)
 update_button.place(x=165,y=480)
@@ -362,10 +473,12 @@ clear_button.place(x=325,y=480)
 wf = tk.LabelFrame(root,text="Window",  width=600, height=140, borderwidth=3)
 wf.place(x=4,y=520)
 
-## New window properties
-wbutton=tk.Button(root,text="Make Window", command= lambda: createWindow(wtentry.get()))
-wbutton.place(x=450,y=540,width=125)
 
+
+
+##
+## New window properties
+##
 l=tk.Label(root, text="Window Title")
 l.place(x=10,y=545)
 wtentry=tk.Entry(root, width=30)
@@ -376,13 +489,13 @@ l=tk.Label(root, text="Window Width")
 l.place(x=10,y=575)
 wwentry=tk.Entry(root, width=4)
 wwentry.place(x=120,y=575)
-wwentry.insert(0,"300")
+wwentry.insert(0,"350")
 
 l=tk.Label(root, text="Window Height")
 l.place(x=10,y=600)
 whentry=tk.Entry(root, width=4)
 whentry.place(x=120,y=600)
-whentry.insert(0,"200")
+whentry.insert(0,"600")
 
 l=tk.Label(root, text="X Position")
 l.place(x=250,y=575)
@@ -397,16 +510,18 @@ ypentry.place(x=330,y=600)
 ypentry.insert(0,"10")
 
 # Create a monospace font
-monospace_font = tkFont.Font(family="Menlo", size=10)
+monospace_font = tkFont.Font(family="Monospace", size=10)
 wigbox=tk.Listbox(root, font=monospace_font)
 wigbox.place(x=60,y=140,width=350,height=150)
-
 
 fnLabel=tk.Label(root,text="File name: ")
 fnLabel.place(x=10, y=625)
 
-write_button = tk.Button(root, text="Write Code", command=write_widget_code)
-write_button.place(x=450, y=570, width=125)
+wbutton=tk.Button(root,text="Make Window", command= lambda: createWindow(wtentry.get()))
+wbutton.place(x=450,y=540,width=125, height=30)
+
+write_button = tk.Button(root, text="Save", command=write_widget_code)
+write_button.place(x=450, y=575, width=125, height =30)
 write_button.config(state="disabled")
 
 edit_button=tk.Button(root, text="Edit", command=edit_widget)
@@ -414,10 +529,14 @@ edit_button.place(x=415,y=140, width=125)
 edit_button.config(state="disabled")
 
 quit_button = tk.Button(root, text="Quit", command=root.quit)
-quit_button.place(x=450, y=600, width=125)
+quit_button.place(x=450, y=610, width=125, height=30)
 
 # tracks number of widgets
 widgetct=-1
+mastct=1
+
+#holds list of tkinter widgets that are masters
+m=[]
 
 # holds list of the widgets
 wlist=[]
@@ -425,9 +544,15 @@ wlist=[]
 wnlist=[]
 # holds the name of the command function or NULL if not needed
 cmdlst=[]
-# entry mode "add" or "update"
+# holds the name of the master for this widget
+masterlist=[]
+masteridx=[]
+#list of python code for command = widgets
+proclist=[]
+# entry mode "add" or "update or "window"-need to create window
+
 global mode
-mode = "add"
+mode = "window"
 
 root.focus_force()
 root.mainloop()
