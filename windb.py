@@ -25,8 +25,11 @@ def makedb():
 	conn.commit()
 	
 	cur.execute("""CREATE TABLE widgets(
-		winname TEXT,
-		title TEXT,
+		winid TEXT,
+		wtype TEXT,
+		wname TEXT,
+		master TEXT,
+		wtext TEXT,
 		width TEXT,
 		height TEXT,
 		x TEXT,
@@ -46,13 +49,13 @@ def checkdb():
 	conn=sq.connect('pywin.db')
 	cur = conn.cursor()
 
-	cur.execute("SELECT *,oid FROM windows")
+	cur.execute("SELECT *,oid FROM widgets")
 	q=cur.fetchall()
 	conn.commit()
-	conn.close()
+	
 	print("in checkdb")
 	for r in q:
 		print(str(r))
-	
-checkdb()
+	conn.close()	
+
 	

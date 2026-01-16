@@ -10,7 +10,7 @@ from tkinter import filedialog as fd
 import platform
 import sys
 import sqlite3 as sq
-from windb import makedb
+from windb import makedb, checkdb
 
 
 
@@ -306,6 +306,54 @@ def createWidget():
     wigbox.insert("end",lbstr)
     
 
+def save_to_db():
+
+	## save the window info to the database
+	conn=sq.connect('pywin.db')
+	c = conn.cursor()
+	sql="""INSERT INTO windows(winname, title, height, width, x, y)
+		VALUES(?,?,?,?,?,?)"""
+	sqldata=('NAME',win.title(),
+			win.winfo_height(),win.winfo_width(),
+			win.winfo_x(),win.winfo_y())
+	c.execute(sql, sqldata)
+	oid=c.lastrowid
+	conn.commit()
+
+	## save the widgets
+	for i,w in enumerate(wlist):
+		fromnum="-1"
+		tonum="-1"
+		if parse_widget_type(w)=="Spinbox":
+			fromnum=str(w.cget("from"))
+			tonum=str(w.cget("to"))
+			
+		sql="""INSERT INTO widgets(winid, wtype, wname, master, wtext,
+				width, height, x, y, from_num, to_num, trigger, code)
+			VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"""
+		sqldata=(oid,
+				parse_widget_type(w),
+				wnlist[i],
+				masterlist[masteridx[i]],
+				w.cget("text"),
+				w.winfo_width(),
+				w.winfo_height(),
+				w.winfo_x(),
+				w.winfo_y(),
+				fromnum,
+				tonum,
+				cmdlst[i],
+				proclist[i])
+				
+		c.execute(sql, sqldata)
+		conn.commit()
+		
+	conn.close()
+	checkdb()
+		
+
+
+
 def write_widget_code():
 	ctr=0
 	filedir=fd.asksaveasfilename()
@@ -389,19 +437,10 @@ def write_widget_code():
 				lf.write(f"Procedure=\n{proclist[i]}\n")
 			lf.write("\nDone with Widgets\n")
 			lf.close()
+	
+		save_to_db()
 		
-		conn=sq.connect('pywin.db')
-		c = conn.cursor()
-		
-		sql="""INSERT INTO windows(winname, title, height, width, x, y)
-			VALUES(?,?,?,?,?,?)"""
-		sqldata=('NAME',win.title(),win.winfo_height(),win.winfo_width(),win.winfo_x(),win.winfo_y())
-		
-		c.execute(sql, sqldata)
-		oid=c.lastrowid
-		conn.commit()
-		conn.close()
-		messagebox.showinfo("Information", f"File {filedir} has been written\nlast index={oid} ")	
+		messagebox.showinfo("Information", f"File {filedir} has been written")
 
 
 def quitapp():
