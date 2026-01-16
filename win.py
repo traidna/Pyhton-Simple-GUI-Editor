@@ -362,6 +362,7 @@ def write_widget_code():
 		f.write("root.mainloop()")
 		f.write("\n")
 		f.close()
+		
 		messagebox.showinfo("Information", f"File {filedir} has been written")
 
 		with open("/Users/thomasraidna/PythonCode/logfile.txt","w") as lf:
