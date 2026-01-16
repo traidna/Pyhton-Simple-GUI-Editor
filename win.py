@@ -9,6 +9,7 @@ import tkinter.font as tkFont
 from tkinter import filedialog as fd
 import platform
 import sys
+import windb
 
 
 def on_drag_start(event):
@@ -363,6 +364,31 @@ def write_widget_code():
 		f.close()
 		messagebox.showinfo("Information", f"File {filedir} has been written")
 
+		with open("/Users/thomasraidna/PythonCode/logfile.txt","w") as lf:
+			lf.write("data dump for application\n")
+			lf.write(f"Title  = {win.title()}\n")
+			lf.write(f"X      = {win.winfo_x()}\n")
+			lf.write(f"Y      = {win.winfo_y()}\n")
+			lf.write(f"Width  = {win.winfo_width()}\n")
+			lf.write(f"Height = {win.winfo_height()}\n")
+			lf.write("done with window\nWidgets \n\n")
+			for i, w in enumerate(wlist):
+				lf.write(f"Index  = {str(i)}\n")
+				lf.write(f"Type   = {parse_widget_type(w)}\n")
+				lf.write(f"Name   = {wnlist[i]}\n")
+				lf.write(f"Master = {masterlist[masteridx[i]]}\n")
+				lf.write(f"Text   = {w.cget("text")}\n")
+				lf.write(f"X      = {w.winfo_x()}\n")
+				lf.write(f"Y      = {w.winfo_y()}\n")
+				lf.write(f"Width  = {w.winfo_width()}\n")
+				lf.write(f"Height = {w.winfo_height()}\n")
+				lf.write(f"Procnm = {cmdlst[i]}\n")
+				lf.write(f"Procedure=\n{proclist[i]}\n")
+			lf.write("\nDone with Widgets\n")
+			lf.close()
+			
+
+
 def quitapp():
 	root.quit()
 	
@@ -580,5 +606,5 @@ global mode
 mode = "window"
 
 root.focus_force()
-name_entry.focus_force()
+wtentry.focus_force()
 root.mainloop()
