@@ -9,7 +9,8 @@ import tkinter.font as tkFont
 from tkinter import filedialog as fd
 import platform
 import sys
-import windb
+#import windb
+
 
 
 
