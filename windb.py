@@ -22,7 +22,7 @@ def makedb():
 		y TEXT)
 		""")
 	conn.commit()
-	
+
 	cur.execute("""CREATE TABLE widgets(
 		winid TEXT,
 		wtype TEXT,
