@@ -340,7 +340,6 @@ def save_to_db():
 	###
 	### check adding new one or updating old
 	### 
-	## if adding new window
 	if int(winid)<1:
 		sql="""INSERT INTO windows(winname, title, height, width, x, y)
 		VALUES(?,?,?,?,?,?)"""
@@ -403,7 +402,7 @@ def save_to_db():
 		conn.commit()
 		
 	conn.close()
-	checkdb()
+	##checkdb()
 		
 
 
@@ -488,7 +487,7 @@ def write_widget_code():
 		
 		save_to_db()
 		
-		messagebox.showinfo("Information", f"File {filedir} has been written")
+		##messagebox.showinfo("Information", f"File {filedir} has been written")
 
 
 
