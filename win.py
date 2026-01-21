@@ -26,6 +26,11 @@ def on_drag_motion(event):
     widget.place(x=x, y=y)
     print("pos of widget "+str(widget.winfo_x()) + "," + str(widget.winfo_y()))
 
+def update_mode(inmode):
+	global mode
+	mode=inmode
+	modelabel.config(text=f'Mode: {mode}')
+	
 
 ## create the database - only needs to happen once or if a reset on the db
 def makedb():
@@ -83,13 +88,17 @@ def createWindow():
     print(gstr)
     win.geometry(gstr)
     wbutton.config(state="disabled")
+    lwbutton.config(state="disabled")
     button.config(state="active")
     write_button.config(state="active")
     edit_button.config(state="active")
     editwin_button.config(state="active")
+    resetwin_button.config(state="active")
     
     m.append(win)
-    mode="add"
+    update_mode("add")
+    
+    #mode="add"
     print("master list = "+str(m))
 
 
@@ -182,8 +191,10 @@ def updateWidget():
 	clr_widget_fields()
 	button.config(state="active")
 	update_button.config(state="disable")
-	global mode
-	mode="add"
+	#global mode
+	#mode="add"
+	update_mode("add")
+	
 	print(wnlist)
 	
 	
@@ -230,8 +241,10 @@ def edit_widget():
 		update_button.config(state="active")
 		
 		name_entry.focus_force()
-		global mode
-		mode="update"
+		#global mode
+		#mode="update"
+		update_mode("update")
+		
 		print(str(type(w)))
 
 
@@ -242,9 +255,10 @@ def clear_widget():
 	update_button.config(state="disable")
 	button.config(state="active")
 	name_entry.focus_force()
-	global mode
-	mode="add"
-
+	#global mode
+	#mode="add"
+	update_mode("add")
+	
 
 ## bind function for not allowing the user window to be closed	
 def on_closing():
@@ -451,8 +465,6 @@ def save_to_db():
 def write_widget_code():
 	ctr=0
 	filedir=fd.asksaveasfilename(initialfile=f'{wnentry.get()}.py')
-	fnLabel.config(text=f"File Name = {filedir}")
-	
 	## list of the command rtns
 	rtnlist=[]
 	## create a separate file for each widget that has a command
@@ -643,11 +655,46 @@ def edit_window():
 	win.geometry(f'{wwentry.get()}x{whentry.get()}+{xpentry.get()}+{ypentry.get()}')
 
 
-#######
+def reset_window():
+	widgetct=-1
+	mastct=1
+
+	#holds list of tkinter widgets that are masters
+	m=[]
+	# holds list of the widgets
+	wlist=[]
+	# holds list of the variable names for the widgets
+	wnlist=[]
+	# holds the name of the command function or NULL if not needed
+	cmdlst=[]
+	# holds the name of the master for this widget
+	masterlist=[]
+	masteridx=[]
+	wigbox.delete(0,tk.END)
+	win.destroy()
+	wbutton.config(state="active")
+	lwbutton.config(state="active")
+	button.config(state="active")
+	write_button.config(state="disable")
+	edit_button.config(state="disable")
+	editwin_button.config(state="disable")
+	resetwin_button.config(state="active")
+	wtentry.delete(0,'end')
+	wnentry.delete(0,'end')
+	whentry.delete(0,'end')
+	wwentry.delete(0,'end')
+	xpentry.delete(0,'end')
+	ypentry.delete(0,'end')
+	update_mode("window")
+	global winid
+	winid=-1
+	
+
+###########################################
 ######
 ###### start of main code
 ######
-######
+###########################################
 global winid
 winid=-1
 
@@ -815,11 +862,20 @@ else:
 wigbox=tk.Listbox(root, font=monospace_font)
 wigbox.place(x=60,y=140,width=350,height=150)
 
+edit_button=tk.Button(root, text="Edit", command=edit_widget)
+edit_button.place(x=415,y=140, width=125)
+edit_button.config(state="disabled")
+
+
 widLabel=tk.Label(root, text="WID :")
 widLabel.place(x=10, y=625)
 
-fnLabel=tk.Label(root,text="File name: ")
-fnLabel.place(x=120, y=625)
+#fnLabel=tk.Label(root,text="File name: ")
+#fnLabel.place(x=120, y=625)
+
+modelabel=tk.Label(root, text="Mode:")
+modelabel.place(x=120, y=625)
+
 
 wbutton=tk.Button(root,text="MakeWin", command=createWindow)
 wbutton.place(x=430,y=540,width=75, height=30)
@@ -827,17 +883,22 @@ wbutton.place(x=430,y=540,width=75, height=30)
 lwbutton=tk.Button(root, text="LoadWin", command = getwin)
 lwbutton.place(x=520,y=540, width=75, height=30)
 
-editwin_button = tk.Button(root, text="Edit",command=edit_window)
+editwin_button = tk.Button(root, text="Update",command=edit_window)
 editwin_button.place(x=430, y=575, width=75, height=30)
 editwin_button.config(state="disabled")
+
+resetwin_button = tk.Button(root, text="Reset",command=reset_window)
+resetwin_button.place(x=520, y=575, width=75, height=30)
+resetwin_button.config(state="disabled")
+
 
 write_button = tk.Button(root, text="Save", command=write_widget_code)
 write_button.place(x=430, y=610, width=75, height =30)
 write_button.config(state="disabled")
 
-edit_button=tk.Button(root, text="Edit", command=edit_widget)
-edit_button.place(x=415,y=140, width=125)
-edit_button.config(state="disabled")
+
+
+
 
 quit_button = tk.Button(root, text="Quit", command=quitapp)
 quit_button.place(x=520, y=610, width=75, height=30)
@@ -865,8 +926,10 @@ masteridx=[]
 # update - editing widgets
 # old - loaded existing app from the data base
 
-global mode
-mode = "window"
+#global mode
+#mode = "window"
+update_mode("window")
+
 ## win is the variable for the tkinter application window
 win=""
 ## call make database, if database exists it will just return
