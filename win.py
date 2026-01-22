@@ -6,6 +6,7 @@
 import tkinter as tk
 from tkinter import IntVar, StringVar
 from tkinter import messagebox
+from tkinter import colorchooser
 import tkinter.font as tkFont
 from tkinter import filedialog as fd
 import platform
@@ -237,7 +238,11 @@ def edit_widget():
 		if (wtype=="Spinbox"):
 			from_entry.insert(0,w.cget("from"))
 			to_entry.insert(0,w.cget("to"))
-		button.config(state="disable")
+		if (wtype=="Button"):
+            global bgcolor
+            w['bg']=bgcolor
+
+        button.config(state="disable")
 		update_button.config(state="active")
 		
 		name_entry.focus_force()
@@ -281,7 +286,8 @@ def createWidget():
     caption=caption_entry.get()
     cmd=cmd_entry.get()
     #cmdcode=cmdtext.get(1.0, "end")
-    global m
+    global m, bgcolor
+    
     mindex=master_options.index(mastervar.get())
     print(f"master options = {master_options} master_index = {mindex} m[mindex]={m[mindex]}")
 
@@ -295,7 +301,7 @@ def createWidget():
         print(f"x={w.winfo_x()}")            
     # Button
     elif (wvar.get() == "Button"):
-        w=tk.Button(m[mindex], text=caption)
+        w=tk.Button(m[mindex], text=caption, bg=bgcolor)
         w.place(x=x_entry.get(), y=y_entry.get(), height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
@@ -639,6 +645,12 @@ def getwin():
 
 	root2.focus_force()
 
+def choose_bg_color():
+    global bgcolor
+    bgcolor = colorchooser.askcolor(title="Choose Color")
+    bgcolor = bgcolor[1]
+
+
 
 ## quit the app destry the open windows
 def quitapp():
@@ -700,6 +712,7 @@ def reset_window():
 ###########################################
 global winid
 winid=-1
+global bgcolor
 
 ost=platform.system()
 ## main window definition  Darwin is Macos
@@ -774,6 +787,12 @@ y_label = tk.Label(root, text="Ypos")
 y_label.place(x=130, y=390)
 y_entry = tk.Entry(root)
 y_entry.place(x=175, y=390, width=50)
+
+bgc_btn = tk.Button(root, text="BG color", command=choose_bg_color)
+bgc_btn.place(x=275, y=385)
+bgcolor = bgc_btn['bg']
+
+
 
 width_label = tk.Label(root, text="Width")
 width_label.place(x=10, y=420)
@@ -858,7 +877,7 @@ ypentry.insert(0,"10")
 if (ost=="Darwin"):
 	monospace_font = tkFont.Font(family="Menlo", size=10)
 elif (ost=="Windows"):
-	pass
+	monospace_font = tkFont.Font(family="Consolas", size=10)
 else:
 	monospace_font = tkFont.Font(family="Monospace", size=10)
 
