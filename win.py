@@ -20,6 +20,7 @@ def on_drag_start(event):
     widget.startX = event.x
     widget.startY = event.y
 
+
 def on_drag_motion(event):
     widget = event.widget
     x = widget.winfo_x() - widget.startX + event.x
@@ -27,6 +28,8 @@ def on_drag_motion(event):
     widget.place(x=x, y=y)
     print("pos of widget "+str(widget.winfo_x()) + "," + str(widget.winfo_y()))
 
+
+## when actions are taken this is called to change the current application mode
 def update_mode(inmode):
 	global mode
 	mode=inmode
@@ -37,7 +40,6 @@ def update_mode(inmode):
 def makedb():
 	
 	if os.path.isfile("pywin.db"):
-		##messagebox.showinfo("","Database exists")
 		return
 	
 	conn=sq.connect('pywin.db')
@@ -100,9 +102,6 @@ def createWindow():
     m.append(win)
     update_mode("add")
     
-    #mode="add"
-    print("master list = "+str(m))
-
 
 ## clear all the widgets for the window on the entry screen
 def clrwinparms():
@@ -166,14 +165,16 @@ def change_widget():
 		from_entry.insert(0,"0")
 		to_entry.delete(0,'end')
 		to_entry.insert(0,"100")
+		if wig=="Scale":
+			orient_btn.config(state="normal")
 	else:
 		##from_label.place_forget()
 		##from_entry.place_forget()
 		##to_label.place_forget()
 		##to_entry.place_forget()
-		from_entry.config(state="disable")
-		to_entry.config(state="disable")
-
+		from_entry.config(state="disabled")
+		to_entry.config(state="disabled")
+		orient_btn.config(state="disabled")
 
 
 ## create name of commnand function
@@ -186,7 +187,7 @@ def update_cmdfnc(event):
 		if wig=='Scale':
 			nstr = nstr + '(event)'
 		else:
-			nstr=nstr + ')'
+			nstr=nstr + '()'
 			
 		cmd_entry.insert(0,nstr)
 
@@ -530,10 +531,11 @@ def write_widget_code():
 		
 		# write out the command= files and imports 
 		for index, c in enumerate(cmdlst):
-			fn=f'{wnentry.get()}_{c}.py'
+				
+			fn=f'{wnentry.get()}_{c.replace("event","").replace("()","")}.py'
 			if c!="":
 				rtnlist.append(fn)
-				
+	
 			## only write the code if one does not exist already
 			if c!="" and not os.path.isfile(fn): 
 				with open(fn,"w") as fnf:
@@ -742,6 +744,8 @@ def edit_window():
 	win.geometry(f'{wwentry.get()}x{whentry.get()}+{xpentry.get()}+{ypentry.get()}')
 
 
+## quit the current window and clear everything so a new window can be made
+
 def reset_window():
 	global wlist, wnlist, masterlist, masteridx
 	widgetct=-1
@@ -758,6 +762,7 @@ def reset_window():
 	# holds the name of the master for this widget
 	masterlist=[]
 	masteridx=[]
+
 	wigbox.delete(0,tk.END)
 	win.destroy()
 	wbutton.config(state="active")
@@ -775,6 +780,7 @@ def reset_window():
 	ypentry.delete(0,'end')
 	clr_widget_fields()
 	update_mode("window")
+
 	global winid
 	winid=-1
 	win=""
@@ -905,6 +911,7 @@ from_label.place(x=10, y=450)
 #from_label.place_forget()
 from_entry = tk.Entry(root)
 from_entry.place(x=60, y=450, width=50)
+from_entry.config(state="disabled")
 #from_entry.place_forget()
 
 to_label = tk.Label(root, text="To")
@@ -912,7 +919,16 @@ to_label.place(x=130, y=450)
 #to_label.place_forget()
 to_entry = tk.Entry(root)
 to_entry.place(x=175, y=450, width=50)
+to_entry.config(state="disabled")
 #to_entry.place_forget()
+
+
+orient_btn = tk.Checkbutton(root, text="Vertical")
+orient_btn.place(x=235, y=450, height=30)
+orient_btn.config(state="disabled")
+
+
+
 
 button=tk.Button(root,text="Make Widget", command=createWidget)
 button.place(x=10,y=480)
@@ -981,9 +997,8 @@ wigbox=tk.Listbox(root, font=monospace_font)
 wigbox.place(x=60,y=140,width=350,height=150)
 
 edit_button=tk.Button(root, text="Edit", command=edit_widget)
-edit_button.place(x=415,y=140, width=125)
+edit_button.place(x=415,y=140, width=125, height=50)
 edit_button.config(state="disabled")
-
 
 widLabel=tk.Label(root, text="WID :")
 widLabel.place(x=10, y=625)
@@ -993,7 +1008,6 @@ widLabel.place(x=10, y=625)
 
 modelabel=tk.Label(root, text="Mode:")
 modelabel.place(x=120, y=625)
-
 
 wbutton=tk.Button(root,text="MakeWin", command=createWindow)
 wbutton.place(x=430,y=540,width=75, height=30)
