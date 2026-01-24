@@ -1,6 +1,7 @@
+#!/usr/bin/python3
 #!/opt/homebrew/opt/python@3.13/bin/python3
 ## above for my mac
-###!/usr/bin/python3
+
 ### linux raspterry pi #!/usr/bin/python3
 
 import tkinter as tk
@@ -155,10 +156,6 @@ def change_widget():
 		caption_entry.config(state="disable")
 				
 	if(wig=="Spinbox" or wig=="Scale"):
-		#from_label.place(x=10, y=450)
-		#from_entry.place(x=60, y=450, width=50)
-		#to_label.place(x=130, y=450)
-		#to_entry.place(x=175, y=450, width=50)
 		to_entry.config(state='normal')
 		from_entry.config(state='normal')
 		from_entry.delete(0,'end')
@@ -168,13 +165,12 @@ def change_widget():
 		if wig=="Scale":
 			orient_btn.config(state="normal")
 	else:
-		##from_label.place_forget()
-		##from_entry.place_forget()
-		##to_label.place_forget()
-		##to_entry.place_forget()
 		from_entry.config(state="disabled")
 		to_entry.config(state="disabled")
 		orient_btn.config(state="disabled")
+	if wig=="Entry" or wig=="Text":
+		bgc_frame.config(bg='white')
+
 
 
 ## create name of commnand function
@@ -202,9 +198,9 @@ def updateWidget():
 	
 	## udpate fg an bg colors
 	if wtype in wigcol:
-		ew.config(fg=fgc_frame['bg'])
+		ew.config(bg=bgc_frame['bg'])
 		if (wtype!="Frame"):
-			ew.config(bg=bgc_frame['bg'])
+			ew.config(fg=fgc_frame['bg'])
 		
 	## update text fields
 	if wtype in wigtxt:
@@ -251,6 +247,7 @@ def edit_widget():
 		cmd_entry.insert(0,cmdlst[index])
 		
 		mastervar.set(masterlist[index])
+		
 		wvar.set(wtype)
 		
 		if wtype in wigtxt:
@@ -338,7 +335,7 @@ def createWidget():
         wlist.append(w)
     # Entry Box
     elif (wvar.get() == "Entry"):
-        w=tk.Entry(m[mindex], bg=bgol, fg=fgcol)
+        w=tk.Entry(m[mindex], bg=bgcol, fg=fgcol)
         w.insert(0,caption)
         w.place(x=x_entry.get(), y=y_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
@@ -484,13 +481,27 @@ def save_to_db():
 		x=w.winfo_x()
 		y=w.winfo_y()
 		
+		#mstridx=masteridx[index]
+		#	x_entry.insert(0,str(w.winfo_x()-m[mstridx].cget("borderwidth")))
+		#	y_entry.insert(0,str(w.winfo_y()-m[mstridx].cget("borderwidth")))
+		
+		
+		
+		
 		# adjust x, y by size or boader (hard coded to 2) if not on root	
-		mstr=masterlist[masteridx[i]]
+		mstr=masterlist[i]
+		#print(f"Save DB - index = {i} masteridx[i]={masteridx[i]}  Master = {mstr}")
+		#print(str(m))
+		#print(str(masterlist))
+		#print(str(masteridx))
+		#print ("********************")
 		if mstr!="root":
-			x=x-1
+			x=x-2   ## borderwidth in win.py is defaulted to 2 this adjusts 
 			y=y-2
 		
-		print(f'name={wnlist[i]}   width={w.winfo_width()}')
+		#print(f'x = {x} and {y}')
+		
+		#print(f'name={wnlist[i]}   width={w.winfo_width()}')
 		
 		sql="""INSERT INTO widgets(winid, wtype, wname, master, wtext,
 				width, height, x, y, from_num, to_num, trigger, fgcolor, bgcolor)
@@ -828,7 +839,7 @@ wigtxt = [
 
 #list of widgets that can use color
 wigcol =[
-	"Button", "Label","Checkbutton", "Radiobutton", "LabelFrame",
+	"Button", "Label","Checkbutton", "Entry", "Radiobutton", "LabelFrame",
 	"Frame", "Listbox", "Canvas", "Scrollbar", "Text", "Scale"
 ]
 # list of widgets that use to and from_
