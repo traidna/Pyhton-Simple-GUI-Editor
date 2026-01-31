@@ -531,14 +531,17 @@ def save_to_db():
 ## write the application
 def write_widget_code():
 	ctr=0
-	filedir=fd.asksaveasfilename(initialfile=f'{wnentry.get()}.py')
+	filedir=fd.asksaveasfilename(initialfile=f'{wnentry.get()}_ahdr.py')
 	## list of the command rtns
 	rtnlist=[]
 	## create a separate file for each widget that has a command
 	with open(filedir,"w") as f:
 		# write imports and window def
 		f.write("import tkinter as tk\n")
-		f.write("from tkinter import IntVar\n\n")
+		f.write("from tkinter import IntVar\n")
+		f.write("import tkinter.font as tkFont\n")
+		f.write("import platform\n\n")
+		f.close()
 		
 		# write out the command= files and imports 
 		for index, c in enumerate(cmdlst):
@@ -555,16 +558,10 @@ def write_widget_code():
 					fnf.write("\n")
 					fnf.close()
 
-		## read files for signals and write them in 
-		print("Routines to pull in\n" + str(rtnlist))
-		for rtn in rtnlist:
-			with open(rtn, 'r') as rf:
-				content = rf.read()
-				rf.close
-				f.write('\n')
-				f.write(content)
-				f.write('\n')
-				
+
+	mainfile = f'{wnentry.get()}_zmain.py'
+		
+	with open(mainfile, "w") as f:		
 		f.write("root=tk.Tk()\n")
 		titlestr='root.title("' + wtentry.get() + '")'
 		f.write(titlestr)
@@ -572,6 +569,18 @@ def write_widget_code():
 		pstr='root.geometry("'+ wwentry.get() + 'x' + whentry.get() + '+' + xpentry.get() + '+' + ypentry.get()+'")'
 		f.write(pstr)
 		f.write("\n\n")
+		
+		## add code to check by os system this will work on pi5+
+		
+		##f.write("monospace_font = tkFont.Font(family='Monospace', size=10)\n\n")
+		f.write('ost=platform.system()\n')
+		f.write('if ost=="Darwin":\n')
+		f.write('\tmonospace_font = tkFont.Font(family="Menlo", size=10)\n')
+		f.write('elif ost=="Windows":\n')
+		f.write('\tmonospace_font = tkFont.Font(family="Consolas", size=10)\n')
+		f.write('else:\n')
+		f.write('\tmonospace_font = tkFont.Font(family="Monospace", size=10)\n\n')
+		
 		
 		
 		# write out all the widgets
@@ -587,6 +596,9 @@ def write_widget_code():
 				pstr = wnlist[ctr] + '=tk.' + wstr+'('+mstr+', text="' + w.cget('text') +'"' 
 			else:
 				 pstr = wnlist[ctr] + '=tk.' + wstr+'('+mstr
+			
+			if wstr=="Listbox":
+				pstr=pstr+', font=monospace_font '
 			
 			if (wstr=="Frame" or wstr=="Labelframe"):
 				pstr=pstr+', borderwidth=2, relief="groove"'
@@ -621,6 +633,9 @@ def write_widget_code():
 		f.write("root.mainloop()")
 		f.write("\n")
 		f.close()
+	
+		os.system(f'rm {wnentry.get()}.py')
+		os.system(f'cat {wnentry.get()}*.py > {wnentry.get()}.py')
 		
 		## save window and wigets to database
 		save_to_db()
