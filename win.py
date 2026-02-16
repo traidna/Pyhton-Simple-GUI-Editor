@@ -568,19 +568,19 @@ def write_widget_code():
 			f.close
 			
 		
-		# write out the command= files and imports 
-		for index, c in enumerate(cmdlst):
-			fn=f'{wnentry.get()}_{c.replace("event","").replace("()","")}.py'
-			if c!="":
-				rtnlist.append(fn)
-	
-			## only write the code if one does not exist already
-			if c!="" and not os.path.isfile(fn): 
-				with open(fn,"w") as fnf:
-					fnf.write(f'def {c}:\n')
-					fnf.write(f'\tprint("In {fn}")\n')
-					fnf.write("\n")
-					fnf.close()
+	# write out the command= files and imports 
+	for index, c in enumerate(cmdlst):
+		fn=f'{wnentry.get()}_{c.replace("event","").replace("()","")}.py'
+		if c!="":
+			rtnlist.append(fn)
+
+		## only write the code if one does not exist already
+		if c!="" and not os.path.isfile(fn): 
+			with open(fn,"w") as fnf:
+				fnf.write(f'def {c}:\n')
+				fnf.write(f'\tprint("In {fn}")\n')
+				fnf.write("\n")
+				fnf.close()
 
 
 	mainfile = f'{wnentry.get()}_zmain.py'
