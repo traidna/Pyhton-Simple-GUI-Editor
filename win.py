@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 #!/opt/homebrew/opt/python@3.13/bin/python3
-## above for my mac
-
-### linux raspterry pi #!/usr/bin/python3
+## above for macos
+### linux raspberry pi #!/usr/bin/python3
 
 import tkinter as tk
 from tkinter import IntVar, StringVar
@@ -27,7 +26,7 @@ def on_drag_motion(event):
     x = widget.winfo_x() - widget.startX + event.x
     y = widget.winfo_y() - widget.startY + event.y
     widget.place(x=x, y=y)
-    print("pos of widget "+str(widget.winfo_x()) + "," + str(widget.winfo_y()))
+    #print("pos of widget "+str(widget.winfo_x()) + "," + str(widget.winfo_y()))
 
 
 ## when actions are taken this is called to change the current application mode
@@ -90,7 +89,7 @@ def createWindow():
     win.protocol("WM_DELETE_WINDOW", on_closing)
     
     gstr=f'{wwentry.get()}x{whentry.get()}+{xpentry.get()}+{ypentry.get()}'
-    print(gstr)
+    ##print(gstr)
     win.geometry(gstr)
     wbutton.config(state="disabled")
     lwbutton.config(state="disabled")
@@ -180,7 +179,7 @@ def update_cmdfnc(event):
 		cmd_entry.delete(0,"end")
 		nstr=name_entry.get().replace(" ","_")
 		nstr='on_'+nstr+'_clicked'
-		if wig=='Scale':
+		if wig=='Scale' or wig=="Listbox":
 			nstr = nstr + '(event)'
 		else:
 			nstr=nstr + '()'
@@ -222,12 +221,11 @@ def updateWidget():
 	#mode="add"
 	update_mode("add")
 	
-	print(wnlist)
+	##print(wnlist)
 	
 	
 # update form with widget info for widget to change, load fields for selected widget
 def edit_widget():
-	print("Edit Widget")
 	selected_index=wigbox.curselection()
 	if (wigbox.size()==0):
 		messagebox.showinfo("No Widgets", "There are no widgets in the list")
@@ -240,7 +238,6 @@ def edit_widget():
 		edit_index=index
 		w=wlist[index]
 		wtype=parse_widget_type(w)
-		print(f"index = {index}  type={wtype} fx={w.winfo_x()}  wx{w.winfo_rootx()}")
 		ew=w
 		clr_widget_fields()
 		name_entry.insert(0,wnlist[index])
@@ -313,10 +310,10 @@ def createWidget():
 
     fgcol=fgc_frame['bg']
     bgcol=bgc_frame['bg']
+    
    
     mindex=master_options.index(mastervar.get())
-    print(f"master options = {master_options} master_index = {mindex} m[mindex]={m[mindex]}")
-
+    
     #Label
     if (wvar.get() == "Label"):
         w=tk.Label(m[mindex], text = caption, bg=bgcol, fg=fgcol)
@@ -324,14 +321,14 @@ def createWidget():
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
         wlist.append(w)
-        print(f"x={w.winfo_x()}")            
+        
     # Button
-    elif (wvar.get() == "Button"):
+    elif (wvar.get() == "Button"): 	
         w=tk.Button(m[mindex], text=caption, bg=bgcol, fg=fgcol)
         w.place(x=x_entry.get(), y=y_entry.get(), height=height_entry.get(), width=width_entry.get())
         w.bind("<ButtonPress-1>", on_drag_start)
         w.bind("<B1-Motion>", on_drag_motion)
-        w.config(bg=bgcolor)
+        ##w.config(bg=bgcolor)
         wlist.append(w)
     # Entry Box
     elif (wvar.get() == "Entry"):
@@ -367,7 +364,8 @@ def createWidget():
     elif (wvar.get() == "Scale"):
         w=tk.Scale(m[mindex], bg=bgcol, fg=fgcol, from_ = from_entry.get(), to=to_entry.get(), orient = tk.HORIZONTAL)
         w.place(x=x_entry.get(), y=y_entry.get(), height=height_entry.get(), width=width_entry.get())
-        w.bind("<ButtonPress-1>", on_drag_start)
+        w.bind("<ButtonPress-1>", 
+        )
         w.bind("<B1-Motion>", on_drag_motion)
         wlist.append(w)     
     # ListBox
@@ -442,16 +440,14 @@ def save_to_db():
 		sqldata=(wnentry.get(),win.title(),
 			win.winfo_height(),win.winfo_width(),
 			win.winfo_x(),win.winfo_y())
-		print(sql)
-		print(sqldata)
+		##print(sql)
+		##print(sqldata)
 		c.execute(sql, sqldata)
 		conn.commit()
 		
 	## if existing window delete all the widgets
 	if int(winid)>0:
-		print("*** deleting fronm widgets "+str(winid))
 		sql=f'DELETE FROM widgets WHERE winid={winid}'
-		print('SQL='+sql)
 		c.execute(sql)
 		conn.commit()
 
@@ -490,19 +486,10 @@ def save_to_db():
 		
 		# adjust x, y by size or boader (hard coded to 2) if not on root	
 		mstr=masterlist[i]
-		#print(f"Save DB - index = {i} masteridx[i]={masteridx[i]}  Master = {mstr}")
-		#print(str(m))
-		#print(str(masterlist))
-		#print(str(masteridx))
-		#print ("********************")
 		if mstr!="root":
 			x=x-2   ## borderwidth in win.py is defaulted to 2 this adjusts 
 			y=y-2
-		
-		#print(f'x = {x} and {y}')
-		
-		#print(f'name={wnlist[i]}   width={w.winfo_width()}')
-		
+
 		sql="""INSERT INTO widgets(winid, wtype, wname, master, wtext,
 				width, height, x, y, from_num, to_num, trigger, fgcolor, bgcolor)
 			VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"""
@@ -527,13 +514,19 @@ def save_to_db():
 		
 	conn.close()
 
+def make_executable():
+	prog=wnentry.get()
+	fn=f'{prog}.py'
+	os.system(f'chmod +x {fn}')
+
+
 def write_bash_script():
 	## create a prog.sh file so you can compile without going into app
 	prog=wnentry.get()
 	fn=f'{prog}.sh'
 	with open(fn,"w") as f:
 		f.write(f'rm {prog}.py\n')
-		f.write(f'cat {prog}*.py > {prog}.py\n')
+		f.write(f'cat {prog}_*.py > {prog}.py\n')
 		f.close()
 		 
 
@@ -547,6 +540,7 @@ def write_widget_code():
 	rtnlist=[]
 	## create a separate file for each widget that has a command
 	with open(filedir,"w") as f:
+		f.write("#!/usr/bin/python3\n\n")
 		# write imports and window def
 		f.write("import tkinter as tk\n")
 		f.write("from tkinter import IntVar\n")
@@ -554,7 +548,7 @@ def write_widget_code():
 		f.write("import platform\n\n")
 		f.close()
 	
-	## creat a modules files with blakn def myinit()
+	## create a modules files with blank def myinit()
 	## user can edit this file to :
 	## 1. add code to run when program starts
 	## 2. add more functions that will be at top of file
@@ -564,7 +558,7 @@ def write_widget_code():
 		with open(fn,"w") as f:
 			f.write("### use Add to do myinit() for run when file starts\n")
 			f.write("def myinit():\n")
-			f.write("\tpass\n")
+			f.write("\tpass\n\n")
 			f.close
 			
 		
@@ -573,7 +567,7 @@ def write_widget_code():
 		fn=f'{wnentry.get()}_{c.replace("event","").replace("()","")}.py'
 		if c!="":
 			rtnlist.append(fn)
-
+	
 		## only write the code if one does not exist already
 		if c!="" and not os.path.isfile(fn): 
 			with open(fn,"w") as fnf:
@@ -609,7 +603,6 @@ def write_widget_code():
 		
 		# write out all the widgets
 		for index,w in enumerate(wlist):
-			print(f"index = {index}  cmd={cmdlst[index]} w={str(w)}")
 			wstr=str(type(w)).split(".")[1]
 			wstr=wstr.split("'")[0]
 			mstr=masterlist[index]
@@ -638,19 +631,28 @@ def write_widget_code():
 				if wstr!="Frame":
 					pstr = pstr + ', fg="' + w["fg"] + '"'
 				
-			if (cmdlst[index]!=""):
+			if cmdlst[index]!="" and wstr!="Listbox":
 				pstr=pstr+", command="+str(cmdlst[index].replace('event','').replace('()',""))
+			
 			pstr=pstr + ' )'
-			print(pstr)
+			
 			p2str = wnlist[ctr] + ".place(x=" + str(w.winfo_x()) + ",y=" + str(w.winfo_y())+ ","
 			p2str= p2str + "height="+str(w.winfo_height()) + ", width="+str(w.winfo_width()) + ")"
-			print(p2str)
-			ctr = ctr+1
+			
 			f.write(pstr)
 			f.write("\n")
 			f.write(p2str)
-			f.write("\n\n")
-
+			f.write("\n")
+			
+			if wstr=="Listbox":
+				pstr=wnlist[ctr]+".bind('<<ListboxSelect>>', " 
+				pstr=pstr+str(cmdlst[index].replace('event','').replace('()',"")) +")\n"
+				f.write(pstr)
+				f.write("\n")
+				
+			f.write("\n")
+			ctr = ctr+1
+			
 		f.write("myinit()\n\n")
 
 		f.write("root.focus_force()\n")
@@ -664,7 +666,8 @@ def write_widget_code():
 		## save window and wigets to database
 		save_to_db()
 		write_bash_script()
-		
+		if exec_var.get()==True:
+			make_executable()
 
 ## load all the widgets for the selected window from the database
 def loadwidgets(wid):
@@ -678,7 +681,6 @@ def loadwidgets(wid):
 	
 	## loop through all the widgets for this window
 	for w in widgets:
-		print(str(w)+'\n')
 		clr_widget_fields()
 		# load all the fileds
 		name_entry.insert(0,w[2])
@@ -782,7 +784,6 @@ def choose_fg_color():
 ## quit the app destry the open windows
 def quitapp():
 	
-	print(str(type(win)))
 	if isinstance(win,tk.Toplevel):
 		win.destroy()
 	root.destroy()
@@ -875,7 +876,7 @@ widgets = [
 
 # list of widget types that can have a command assignment
 wigcmd = [
-	"Button", "Checkbutton", "Radiobutton", "Spinbox", "Scale", "Menu"
+	"Button", "Checkbutton", "Listbox", "Radiobutton", "Spinbox", "Scale", "Menu"
 ]
 #list of widget types that can have text assignment
 wigtxt = [
@@ -968,28 +969,21 @@ from_label.place(x=10, y=450)
 from_entry = tk.Entry(root)
 from_entry.place(x=60, y=450, width=50)
 from_entry.config(state="disabled")
-#from_entry.place_forget()
+
 
 to_label = tk.Label(root, text="To")
 to_label.place(x=130, y=450)
-#to_label.place_forget()
 to_entry = tk.Entry(root)
 to_entry.place(x=175, y=450, width=50)
 to_entry.config(state="disabled")
-#to_entry.place_forget()
-
 
 orient_btn = tk.Checkbutton(root, text="Vertical")
 orient_btn.place(x=235, y=450, height=30)
 orient_btn.config(state="disabled")
 
-
-
-
 button=tk.Button(root,text="Make Widget", command=createWidget)
 button.place(x=10,y=480)
 button.config(state="disabled")
-#root.bind('<Return>', lambda event:createWidget())
 
 update_button=tk.Button(root,text="Update Widget", command=updateWidget)
 update_button.place(x=165,y=480)
@@ -1059,8 +1053,13 @@ edit_button.config(state="disabled")
 widLabel=tk.Label(root, text="WID :")
 widLabel.place(x=10, y=625)
 
-#fnLabel=tk.Label(root,text="File name: ")
-#fnLabel.place(x=120, y=625)
+
+exec_var = tk.BooleanVar()
+exec_var.set(True)
+
+w=tk.Checkbutton(root,text="Make Executable", variable=exec_var)
+w.place(x=240, y=625)
+
 
 modelabel=tk.Label(root, text="Mode:")
 modelabel.place(x=120, y=625)
